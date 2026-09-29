@@ -21,7 +21,7 @@ state-university courses.
 Clone the repository and create a virtual environment:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Nipun-Bandara/expert-system.git
 cd <repository>
 python -m venv .venv
 ```
@@ -119,7 +119,6 @@ The knowledge base uses the handbook source identifiers supplied with the rule
 requirements:
 
 - `student_handbook_english_2025/2026.pdf`
-- `student_handbook_english.pdf`
 
 Exact page and section information is recorded in [docs/sources.md](docs/sources.md)
 and beside every rule in [docs/rules.md](docs/rules.md).

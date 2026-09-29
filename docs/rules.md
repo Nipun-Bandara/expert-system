@@ -125,7 +125,7 @@ order is `A > B > C > S > F`. “At least” includes the named grade.
   - Mathematics
   - Physics
 - **THEN:** The Information Technology A/L requirement passes.
-- **Source:** `student_handbook_english.pdf`
+- **Source:** `student_handbook_english_2025/2026.pdf`
 - **Page:** 83, Section 2.2.8.1
 
 ### R15 — Law A/L Grade
@@ -180,7 +180,7 @@ order is `A > B > C > S > F`. “At least” includes the named grade.
   at least two supplied grades are C or better; **AND** exactly three supplied
   grades are S or better.
 - **THEN:** The Law A/L requirement passes.
-- **Source:** `student_handbook_english.pdf`
+- **Source:** `student_handbook_english_2025/2026.pdf`
 - **Page:** 90, Section 2.2.8.10
 
 ### R16 — Law O/L English
@@ -222,7 +222,7 @@ order is `A > B > C > S > F`. “At least” includes the named grade.
   `3 - mathematics-list subject count`; **AND** exactly three supplied grades
   are S or better.
 - **THEN:** The Quantity Surveying A/L requirement passes.
-- **Source:** `student_handbook_english.pdf`
+- **Source:** `student_handbook_english_2025/2026.pdf`
 - **Page:** 84, Section 2.2.8.3
 
 ### R19 — Quantity Surveying O/L Mathematics

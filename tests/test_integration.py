@@ -7,7 +7,7 @@ from expert_system.models import ApplicantFacts, CourseEvaluation
 
 
 HANDBOOK_2025 = "student_handbook_english_2025/2026.pdf"
-HANDBOOK = "student_handbook_english.pdf"
+HANDBOOK = "student_handbook_english_2025/2026.pdf"
 
 
 def make_applicant(**overrides: object) -> ApplicantFacts:

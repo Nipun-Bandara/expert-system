@@ -726,7 +726,7 @@ R21 = Rule(
 COURSE_RULES += (R16, R17, R19, R20, R21)
 
 
-SOURCE_R14_R15_R18 = "student_handbook_english.pdf"
+SOURCE_R14_R15_R18 = "student_handbook_english_2025/2026.pdf"
 
 IT_GRADE_C_SUBJECTS = (
     "Higher Mathematics",
