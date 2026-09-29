@@ -37,3 +37,26 @@ class ApplicantFacts:
 
         self.al_results = _normalize_results(self.al_results)
         self.ol_results = _normalize_results(self.ol_results)
+
+
+@dataclass
+class RuleResult:
+    """Recorded outcome of evaluating one rule."""
+
+    rule_id: str
+    rule_name: str
+    passed: bool
+    message: str
+    source: str
+    page: int
+
+
+@dataclass
+class CourseEvaluation:
+    """Combined general and course-specific results for one course."""
+
+    course_name: str
+    eligible: bool
+    general_rule_results: list[RuleResult]
+    course_rule_results: list[RuleResult]
+    explanation: str
