@@ -153,3 +153,179 @@ R04 = Rule(
 )
 
 GENERAL_RULES = (R01, R02, R03, R04)
+
+
+MEDICAL_SCIENCE_SUBJECTS = ("Biology", "Chemistry", "Physics")
+ENGINEERING_SUBJECTS = ("Chemistry", "Combined Mathematics", "Physics")
+
+
+def _relevant_grades(
+    facts: ApplicantFacts,
+    required_subjects: tuple[str, ...],
+) -> dict[str, str]:
+    """Return supplied grades for required subjects using their exact names."""
+    return {
+        subject: facts.al_results[subject.casefold()]
+        for subject in required_subjects
+        if subject.casefold() in facts.al_results
+    }
+
+
+def _subject_details(
+    required_subjects: tuple[str, ...],
+    supplied_grades: dict[str, str],
+) -> str:
+    """Format required subjects and supplied relevant grades for an explanation."""
+    required = ", ".join(required_subjects)
+    supplied = ", ".join(
+        f"{subject}={grade}" for subject, grade in supplied_grades.items()
+    )
+    return (
+        f"Required subjects: {required}. "
+        f"Supplied relevant grades: {supplied or 'none'}."
+    )
+
+
+def _evaluate_three_subject_s_requirement(
+    facts: ApplicantFacts,
+    *,
+    rule_id: str,
+    rule_name: str,
+    required_subjects: tuple[str, ...],
+    page: int,
+) -> RuleResult:
+    """Evaluate a requirement for three named subjects at grade S or better."""
+    supplied = _relevant_grades(facts, required_subjects)
+    missing = [subject for subject in required_subjects if subject not in supplied]
+    details = _subject_details(required_subjects, supplied)
+
+    if missing:
+        passed = False
+        reason = (
+            f"FAIL: missing required subjects: {', '.join(missing)}."
+        )
+    else:
+        passed = count_grades_at_least(supplied.values(), "S") == 3
+        reason = (
+            "PASS: all three required subjects have grade S or better."
+            if passed
+            else "FAIL: at least one required subject has a grade below S."
+        )
+
+    return RuleResult(
+        rule_id=rule_id,
+        rule_name=rule_name,
+        passed=passed,
+        message=f"{details} {reason}",
+        source=SOURCE,
+        page=page,
+    )
+
+
+def _evaluate_r05(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Medicine subject and grade requirement."""
+    supplied = _relevant_grades(facts, MEDICAL_SCIENCE_SUBJECTS)
+    missing = [
+        subject for subject in MEDICAL_SCIENCE_SUBJECTS if subject not in supplied
+    ]
+    details = _subject_details(MEDICAL_SCIENCE_SUBJECTS, supplied)
+
+    if missing:
+        passed = False
+        reason = f"FAIL: missing required subjects: {', '.join(missing)}."
+    else:
+        all_at_least_s = count_grades_at_least(supplied.values(), "S") == 3
+        at_least_two_c = count_grades_at_least(supplied.values(), "C") >= 2
+        passed = all_at_least_s and at_least_two_c
+        if passed:
+            reason = (
+                "PASS: all three required subjects have grade S or better and at "
+                "least two have grade C or better."
+            )
+        elif not all_at_least_s:
+            reason = "FAIL: at least one required subject has a grade below S."
+        else:
+            reason = (
+                "FAIL: fewer than two required subjects have grade C or better."
+            )
+
+    return RuleResult(
+        rule_id="R05",
+        rule_name="Medicine Subject/Grade",
+        passed=passed,
+        message=f"{details} {reason}",
+        source=SOURCE,
+        page=50,
+    )
+
+
+def _evaluate_r06(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Dental Surgery subject and grade requirement."""
+    return _evaluate_three_subject_s_requirement(
+        facts,
+        rule_id="R06",
+        rule_name="Dental Surgery Subject/Grade",
+        required_subjects=MEDICAL_SCIENCE_SUBJECTS,
+        page=51,
+    )
+
+
+def _evaluate_r07(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Veterinary Science subject and grade requirement."""
+    return _evaluate_three_subject_s_requirement(
+        facts,
+        rule_id="R07",
+        rule_name="Veterinary Science Subject/Grade",
+        required_subjects=MEDICAL_SCIENCE_SUBJECTS,
+        page=51,
+    )
+
+
+def _evaluate_r08(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Engineering subject and grade requirement."""
+    return _evaluate_three_subject_s_requirement(
+        facts,
+        rule_id="R08",
+        rule_name="Engineering Subject/Grade",
+        required_subjects=ENGINEERING_SUBJECTS,
+        page=68,
+    )
+
+
+R05 = Rule(
+    id="R05",
+    name="Medicine Subject/Grade",
+    applies_to="Medicine",
+    source=SOURCE,
+    page=50,
+    evaluation_function=_evaluate_r05,
+)
+
+R06 = Rule(
+    id="R06",
+    name="Dental Surgery Subject/Grade",
+    applies_to="Dental Surgery",
+    source=SOURCE,
+    page=51,
+    evaluation_function=_evaluate_r06,
+)
+
+R07 = Rule(
+    id="R07",
+    name="Veterinary Science Subject/Grade",
+    applies_to="Veterinary Science",
+    source=SOURCE,
+    page=51,
+    evaluation_function=_evaluate_r07,
+)
+
+R08 = Rule(
+    id="R08",
+    name="Engineering Subject/Grade",
+    applies_to="Engineering",
+    source=SOURCE,
+    page=68,
+    evaluation_function=_evaluate_r08,
+)
+
+COURSE_RULES = (R05, R06, R07, R08)
