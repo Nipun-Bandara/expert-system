@@ -4,7 +4,7 @@ from collections.abc import Callable, Iterable
 
 from expert_system.engine import COURSE_RULE_MAP, evaluate_all_courses, evaluate_course
 from expert_system.grades import normalize_grade
-from expert_system.models import ApplicantFacts, CourseEvaluation, RuleResult
+from expert_system.models import ApplicantFacts, CourseEvaluation
 
 
 APPLICATION_TITLE = "Sri Lankan University Course Eligibility Expert System"
@@ -262,29 +262,12 @@ def collect_applicant_facts(
     )
 
 
-def _display_rule_result(result: RuleResult, output_fn: OutputFunction) -> None:
-    """Display one rule result and its source metadata."""
-    status = "PASS" if result.passed else "FAIL"
-    output_fn(f"[{status}] {result.rule_id} - {result.rule_name}")
-    output_fn(result.message)
-    output_fn(f"Source: {result.source}, page {result.page}")
-
-
 def display_course_evaluation(
     evaluation: CourseEvaluation,
     output_fn: OutputFunction = print,
 ) -> None:
-    """Display a structured course evaluation."""
-    output_fn("\n" + "=" * 60)
-    output_fn(f"Course: {evaluation.course_name}")
-    output_fn(f"Result: {'Eligible' if evaluation.eligible else 'Not Eligible'}")
-    output_fn("\nGeneral Rules")
-    for result in evaluation.general_rule_results:
-        _display_rule_result(result, output_fn)
-    output_fn("\nCourse-Specific Rules")
-    for result in evaluation.course_rule_results:
-        _display_rule_result(result, output_fn)
-    output_fn(f"\nExplanation: {evaluation.explanation}")
+    """Display the complete explanation prepared by the inference layer."""
+    output_fn("\n" + evaluation.explanation)
 
 
 def _parse_menu_choice(value: str) -> str:

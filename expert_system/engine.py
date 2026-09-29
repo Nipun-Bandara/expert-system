@@ -23,6 +23,7 @@ from expert_system.knowledge_base import (
     R21,
     Rule,
 )
+from expert_system.explanations import build_course_explanation
 from expert_system.models import ApplicantFacts, CourseEvaluation, RuleResult
 
 
@@ -54,35 +55,6 @@ def evaluate_general_eligibility(applicant: ApplicantFacts) -> list[RuleResult]:
     return evaluate_rules(GENERAL_RULES, applicant)
 
 
-def _build_explanation(
-    course_name: str,
-    general_results: list[RuleResult],
-    course_results: list[RuleResult],
-) -> str:
-    """Build a concise explanation from failed or successful rule results."""
-    failed_general = [result for result in general_results if not result.passed]
-    failed_course = [result for result in course_results if not result.passed]
-
-    if not failed_general and not failed_course:
-        return (
-            f"Eligible for {course_name}: all general and course-specific rules "
-            "passed."
-        )
-
-    parts = [f"Not eligible for {course_name}."]
-    if failed_general:
-        failures = ", ".join(
-            f"{result.rule_id} - {result.rule_name}" for result in failed_general
-        )
-        parts.append(f"Failed general rules: {failures}.")
-    if failed_course:
-        failures = ", ".join(
-            f"{result.rule_id} - {result.rule_name}" for result in failed_course
-        )
-        parts.append(f"Failed course-specific rules: {failures}.")
-    return " ".join(parts)
-
-
 def _course_evaluation_from_results(
     course_name: str,
     general_results: list[RuleResult],
@@ -97,8 +69,9 @@ def _course_evaluation_from_results(
         eligible=eligible,
         general_rule_results=list(general_results),
         course_rule_results=list(course_results),
-        explanation=_build_explanation(
+        explanation=build_course_explanation(
             course_name,
+            eligible,
             general_results,
             course_results,
         ),

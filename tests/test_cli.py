@@ -13,6 +13,7 @@ from expert_system.cli import (
     prompt_grade,
     run,
 )
+from expert_system.explanations import build_course_explanation
 from expert_system.models import CourseEvaluation, RuleResult
 
 
@@ -134,25 +135,33 @@ def test_display_course_evaluation_shows_rule_details_and_sources() -> None:
         source="handbook.pdf",
         page=58,
     )
+    explanation = build_course_explanation(
+        "Pharmacy",
+        False,
+        [general_result],
+        [course_result],
+    )
     evaluation = CourseEvaluation(
         course_name="Pharmacy",
         eligible=False,
         general_rule_results=[general_result],
         course_rule_results=[course_result],
-        explanation="R12 failed.",
+        explanation=explanation,
     )
     output: list[str] = []
 
     display_course_evaluation(evaluation, output.append)
     rendered = "\n".join(output)
 
-    assert "Course: Pharmacy" in rendered
-    assert "Result: Not Eligible" in rendered
-    assert "General Rules" in rendered
-    assert "[PASS] R03 - Common General Paper" in rendered
-    assert "Course-Specific Rules" in rendered
-    assert "[FAIL] R12 - Pharmacy A/L Grades" in rendered
-    assert "Source: handbook.pdf, page 58" in rendered
+    assert "Pharmacy" in rendered
+    assert "FINAL RESULT: NOT ELIGIBLE" in rendered
+    assert "GENERAL RULE TRACE" in rendered
+    assert "PASS R03 - Common General Paper" in rendered
+    assert "COURSE RULE TRACE" in rendered
+    assert "FAIL R12 - Pharmacy A/L Grades" in rendered
+    assert "FAILED REQUIREMENTS" in rendered
+    assert "SOURCE REFERENCES" in rendered
+    assert "handbook.pdf, page 58 (R12)" in rendered
 
 
 def test_run_can_exit_from_main_menu() -> None:

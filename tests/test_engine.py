@@ -69,7 +69,7 @@ def test_general_rules_and_r05_make_medicine_eligible() -> None:
     assert evaluation.eligible is True
     assert all(result.passed for result in evaluation.general_rule_results)
     assert [result.rule_id for result in evaluation.course_rule_results] == ["R05"]
-    assert "Eligible for Medicine" in evaluation.explanation
+    assert "FINAL RESULT: ELIGIBLE" in evaluation.explanation
 
 
 def test_medicine_is_ineligible_when_r05_fails() -> None:
