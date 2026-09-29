@@ -1,0 +1,22 @@
+Sri Lankan University Course Eligibility Expert System
+Text-Based Architecture Diagram
+
+User Input
+   |
+   v
+Working Memory / ApplicantFacts
+   |
+   v
+Inference Engine
+   |
+   v
+Knowledge Base
+   |
+   v
+Rule Results
+   |
+   v
+Explanation Facility
+   |
+   v
+Eligibility Result
