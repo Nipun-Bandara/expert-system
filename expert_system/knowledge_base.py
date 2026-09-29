@@ -534,3 +534,428 @@ R13 = Rule(
 )
 
 COURSE_RULES += (R09, R10, R11, R12, R13)
+
+
+def _evaluate_single_ol_subject_requirement(
+    facts: ApplicantFacts,
+    *,
+    rule_id: str,
+    rule_name: str,
+    course: str,
+    subject: str,
+    required_grade: str,
+    page: int,
+) -> RuleResult:
+    """Evaluate one exact O/L subject against a minimum grade."""
+    grade = facts.ol_results.get(subject.casefold())
+    supplied = f"{subject}={grade}" if grade is not None else "none"
+
+    if grade is None:
+        passed = False
+        reason = f"FAIL: the required O/L {subject} result was not supplied."
+    else:
+        passed = count_grades_at_least([grade], required_grade) == 1
+        reason = (
+            f"PASS: O/L {subject} has grade {required_grade} or better."
+            if passed
+            else f"FAIL: O/L {subject} has a grade below {required_grade}."
+        )
+
+    return RuleResult(
+        rule_id=rule_id,
+        rule_name=rule_name,
+        passed=passed,
+        message=(
+            f"Course: {course}. Required subject: O/L {subject} at grade "
+            f"{required_grade} or better. Supplied relevant grade: {supplied}. "
+            f"{reason}"
+        ),
+        source=SOURCE,
+        page=page,
+    )
+
+
+def _evaluate_r16(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Law O/L English requirement."""
+    return _evaluate_single_ol_subject_requirement(
+        facts,
+        rule_id="R16",
+        rule_name="Law O/L English",
+        course="Law",
+        subject="English",
+        required_grade="C",
+        page=90,
+    )
+
+
+def _evaluate_r17(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Law O/L Sinhala-or-Tamil requirement."""
+    sinhala = facts.ol_results.get("sinhala")
+    tamil = facts.ol_results.get("tamil")
+    supplied_parts = []
+    if sinhala is not None:
+        supplied_parts.append(f"Sinhala={sinhala}")
+    if tamil is not None:
+        supplied_parts.append(f"Tamil={tamil}")
+    supplied = ", ".join(supplied_parts) or "none"
+
+    sinhala_met = (
+        count_grades_at_least([sinhala], "C") == 1 if sinhala is not None else False
+    )
+    tamil_met = (
+        count_grades_at_least([tamil], "C") == 1 if tamil is not None else False
+    )
+    passed = sinhala_met or tamil_met
+
+    if passed:
+        qualifying_subjects = []
+        if sinhala_met:
+            qualifying_subjects.append("Sinhala")
+        if tamil_met:
+            qualifying_subjects.append("Tamil")
+        reason = (
+            "PASS: O/L "
+            f"{' and '.join(qualifying_subjects)} has grade C or better, satisfying "
+            "the Sinhala OR Tamil requirement."
+        )
+    elif sinhala is None and tamil is None:
+        reason = "FAIL: neither an O/L Sinhala nor an O/L Tamil result was supplied."
+    else:
+        reason = (
+            "FAIL: neither supplied O/L Sinhala nor O/L Tamil has grade C or better."
+        )
+
+    return RuleResult(
+        rule_id="R17",
+        rule_name="Law O/L Sinhala/Tamil",
+        passed=passed,
+        message=(
+            "Course: Law. Required subjects: O/L Sinhala at grade C or better OR "
+            "O/L Tamil at grade C or better. Supplied relevant grades: "
+            f"{supplied}. {reason}"
+        ),
+        source=SOURCE,
+        page=90,
+    )
+
+
+def _evaluate_r19(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Quantity Surveying O/L Mathematics requirement."""
+    return _evaluate_single_ol_subject_requirement(
+        facts,
+        rule_id="R19",
+        rule_name="Quantity Surveying O/L Mathematics",
+        course="Quantity Surveying",
+        subject="Mathematics",
+        required_grade="C",
+        page=84,
+    )
+
+
+def _evaluate_r20(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Quantity Surveying O/L Science requirement."""
+    return _evaluate_single_ol_subject_requirement(
+        facts,
+        rule_id="R20",
+        rule_name="Quantity Surveying O/L Science",
+        course="Quantity Surveying",
+        subject="Science",
+        required_grade="S",
+        page=84,
+    )
+
+
+def _evaluate_r21(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Quantity Surveying O/L English requirement."""
+    return _evaluate_single_ol_subject_requirement(
+        facts,
+        rule_id="R21",
+        rule_name="Quantity Surveying O/L English",
+        course="Quantity Surveying",
+        subject="English",
+        required_grade="C",
+        page=84,
+    )
+
+
+R16 = Rule(
+    id="R16",
+    name="Law O/L English",
+    applies_to="Law",
+    source=SOURCE,
+    page=90,
+    evaluation_function=_evaluate_r16,
+)
+
+R17 = Rule(
+    id="R17",
+    name="Law O/L Sinhala/Tamil",
+    applies_to="Law",
+    source=SOURCE,
+    page=90,
+    evaluation_function=_evaluate_r17,
+)
+
+R19 = Rule(
+    id="R19",
+    name="Quantity Surveying O/L Mathematics",
+    applies_to="Quantity Surveying",
+    source=SOURCE,
+    page=84,
+    evaluation_function=_evaluate_r19,
+)
+
+R20 = Rule(
+    id="R20",
+    name="Quantity Surveying O/L Science",
+    applies_to="Quantity Surveying",
+    source=SOURCE,
+    page=84,
+    evaluation_function=_evaluate_r20,
+)
+
+R21 = Rule(
+    id="R21",
+    name="Quantity Surveying O/L English",
+    applies_to="Quantity Surveying",
+    source=SOURCE,
+    page=84,
+    evaluation_function=_evaluate_r21,
+)
+
+COURSE_RULES += (R16, R17, R19, R20, R21)
+
+
+SOURCE_R14_R15_R18 = "student_handbook_english.pdf"
+
+IT_GRADE_C_SUBJECTS = (
+    "Higher Mathematics",
+    "Combined Mathematics",
+    "Mathematics",
+    "Physics",
+)
+
+LAW_LIST_A = (
+    "Accounting",
+    "Agricultural Science",
+    "Biology",
+    "Business Statistics",
+    "Business Studies",
+    "Chemistry",
+    "Political Science",
+    "Geography",
+    "Higher Mathematics",
+    "History",
+    "Logic & Scientific Method",
+    "Economics",
+    "Physics",
+    "Communication & Media Studies",
+    "Mathematics",
+    "Combined Mathematics",
+    "Information & Communication Technology",
+)
+
+LAW_LIST_B = (
+    "Buddhism",
+    "Buddhist Civilization",
+    "Islam",
+    "Islamic Civilization",
+    "Christianity",
+    "Christian Civilization",
+    "Chinese",
+    "Greek & Roman Civilization",
+    "English",
+    "Japanese",
+    "French",
+    "Pali",
+    "German",
+    "Sanskrit",
+    "Arabic",
+    "Sinhala",
+    "Hindi",
+    "Tamil",
+    "Russian",
+    "Hinduism",
+    "Hindu Civilization",
+    "Korean",
+)
+
+QS_MATH_LIST = ("Combined Mathematics", "Higher Mathematics")
+QS_OTHER_LIST = (
+    "Accounting",
+    "Economics",
+    "Business Statistics",
+    "Business Studies",
+    "Physics",
+    "Chemistry",
+    "Information & Communication Technology",
+)
+
+
+def _format_grades(grades: dict[str, str]) -> str:
+    """Format an exact-name subject-to-grade mapping for rule explanations."""
+    return ", ".join(f"{subject}={grade}" for subject, grade in grades.items()) or "none"
+
+
+def _evaluate_r14(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Information Technology A/L grade requirement."""
+    passed_subject_count = count_grades_at_least(facts.al_results.values(), "S")
+    relevant = _relevant_grades(facts, IT_GRADE_C_SUBJECTS)
+    qualifying = {
+        subject: grade
+        for subject, grade in relevant.items()
+        if count_grades_at_least([grade], "C") == 1
+    }
+    enough_passed_subjects = passed_subject_count >= 3
+    has_required_c_grade = bool(qualifying)
+    passed = enough_passed_subjects and has_required_c_grade
+
+    if passed:
+        reason = (
+            "PASS: at least three A/L subjects have grade S or better and at least "
+            "one listed subject has grade C or better."
+        )
+    elif not enough_passed_subjects and not has_required_c_grade:
+        reason = (
+            "FAIL: fewer than three A/L subjects have grade S or better and none "
+            "of the listed subjects has grade C or better."
+        )
+    elif not enough_passed_subjects:
+        reason = "FAIL: fewer than three A/L subjects have grade S or better."
+    else:
+        reason = "FAIL: none of the listed subjects has grade C or better."
+
+    return RuleResult(
+        rule_id="R14",
+        rule_name="Information Technology A/L Grades",
+        passed=passed,
+        message=(
+            f"Passed A/L subjects: {passed_subject_count}. Grade-C OR subjects: "
+            f"{', '.join(IT_GRADE_C_SUBJECTS)}. Supplied relevant grades: "
+            f"{_format_grades(relevant)}. {reason}"
+        ),
+        source=SOURCE_R14_R15_R18,
+        page=83,
+    )
+
+
+def _evaluate_r15(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Law A/L subject-list and grade requirements."""
+    list_a_grades = _relevant_grades(facts, LAW_LIST_A)
+    list_b_grades = _relevant_grades(facts, LAW_LIST_B)
+    list_a_count = len(list_a_grades)
+    list_b_count = len(list_b_grades)
+    subject_pattern_met = list_a_count == 3 or (
+        1 <= list_a_count <= 2 and list_b_count == 3 - list_a_count
+    )
+    grades_at_least_c = count_grades_at_least(facts.al_results.values(), "C")
+    grades_at_least_s = count_grades_at_least(facts.al_results.values(), "S")
+    grade_pattern_met = grades_at_least_c >= 2 and grades_at_least_s == 3
+    passed = subject_pattern_met and grade_pattern_met
+
+    failures = []
+    if not subject_pattern_met:
+        failures.append(
+            "the supplied subjects do not satisfy either the three-from-List-A "
+            "branch or the one/two-from-List-A plus List-B branch"
+        )
+    if grades_at_least_c < 2:
+        failures.append("fewer than two grades are C or better")
+    if grades_at_least_s != 3:
+        failures.append("the number of grades S or better is not exactly three")
+    reason = (
+        "PASS: the subject-list condition is satisfied, at least two grades are C "
+        "or better, and exactly three grades are S or better."
+        if passed
+        else f"FAIL: {'; '.join(failures)}."
+    )
+
+    return RuleResult(
+        rule_id="R15",
+        rule_name="Law A/L Grade",
+        passed=passed,
+        message=(
+            f"Supplied List A grades: {_format_grades(list_a_grades)}. Supplied "
+            f"List B grades: {_format_grades(list_b_grades)}. List A count: "
+            f"{list_a_count}; List B count: {list_b_count}; grades C or better: "
+            f"{grades_at_least_c}; grades S or better: {grades_at_least_s}. {reason}"
+        ),
+        source=SOURCE_R14_R15_R18,
+        page=90,
+    )
+
+
+def _evaluate_r18(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Quantity Surveying A/L subject and grade requirements."""
+    math_grades = _relevant_grades(facts, QS_MATH_LIST)
+    other_grades = _relevant_grades(facts, QS_OTHER_LIST)
+    math_count = len(math_grades)
+    other_count = len(other_grades)
+    grades_at_least_s = count_grades_at_least(facts.al_results.values(), "S")
+    math_condition_met = math_count >= 1
+    other_condition_met = other_count == 3 - math_count
+    grade_condition_met = grades_at_least_s == 3
+    passed = math_condition_met and other_condition_met and grade_condition_met
+
+    failures = []
+    if not math_condition_met:
+        failures.append("no subject from the Quantity Surveying mathematics list")
+    if not other_condition_met:
+        failures.append(
+            f"the other-list count is {other_count}, not {3 - math_count}"
+        )
+    if not grade_condition_met:
+        failures.append("the number of grades S or better is not exactly three")
+    reason = (
+        "PASS: at least one mathematics-list subject is supplied, the required "
+        "number of other-list subjects is supplied, and exactly three grades are S "
+        "or better."
+        if passed
+        else f"FAIL: {'; '.join(failures)}."
+    )
+
+    return RuleResult(
+        rule_id="R18",
+        rule_name="Quantity Surveying A/L",
+        passed=passed,
+        message=(
+            f"Supplied mathematics-list grades: {_format_grades(math_grades)}. "
+            f"Supplied other-list grades: {_format_grades(other_grades)}. "
+            f"Mathematics-list count: {math_count}; other-list count: {other_count}; "
+            f"grades S or better: {grades_at_least_s}. {reason}"
+        ),
+        source=SOURCE_R14_R15_R18,
+        page=84,
+    )
+
+
+R14 = Rule(
+    id="R14",
+    name="Information Technology A/L Grades",
+    applies_to="Information Technology",
+    source=SOURCE_R14_R15_R18,
+    page=83,
+    evaluation_function=_evaluate_r14,
+)
+
+R15 = Rule(
+    id="R15",
+    name="Law A/L Grade",
+    applies_to="Law",
+    source=SOURCE_R14_R15_R18,
+    page=90,
+    evaluation_function=_evaluate_r15,
+)
+
+R18 = Rule(
+    id="R18",
+    name="Quantity Surveying A/L",
+    applies_to="Quantity Surveying",
+    source=SOURCE_R14_R15_R18,
+    page=84,
+    evaluation_function=_evaluate_r18,
+)
+
+COURSE_RULES = tuple(
+    sorted(COURSE_RULES + (R14, R15, R18), key=lambda rule: int(rule.id[1:]))
+)
