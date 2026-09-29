@@ -6,8 +6,7 @@ from expert_system.engine import evaluate_course
 from expert_system.models import ApplicantFacts, CourseEvaluation
 
 
-HANDBOOK_2025 = "student_handbook_english_2025/2026.pdf"
-HANDBOOK = "student_handbook_english_2025/2026.pdf"
+HANDBOOK = "UGC-SL-ADMISSIONS-HANDBOOK-2025-2026"
 
 
 def make_applicant(**overrides: object) -> ApplicantFacts:
@@ -93,7 +92,7 @@ def test_general_failures_disqualify_otherwise_eligible_medicine_applicant(
         for result in evaluation.general_rule_results
         if result.rule_id == failed_rule
     )
-    assert failed_result.source == HANDBOOK_2025
+    assert failed_result.source == HANDBOOK
     assert failed_result.page == page
 
 

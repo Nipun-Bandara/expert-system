@@ -1,0 +1,64 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\title{Sri Lankan University Course Eligibility Expert System}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Scope}
+
+This Python command-line application checks whether supplied applicant facts
+satisfy the minimum eligibility rules represented for nine Sri Lankan
+state-university courses. It does not predict admission, selection, ranking,
+Z-scores, quotas, cut-offs, or available places.
+
+\section{Knowledge Base and Source}
+
+The knowledge base contains rules R01--R21 independently of the command-line
+interface. Every rule cites the source identifier
+\texttt{UGC-SL-ADMISSIONS-HANDBOOK-2025-2026}, representing the University
+Grants Commission Sri Lanka publication \emph{Admission to Undergraduate
+Courses of the Universities in Sri Lanka, Academic Year 2025/2026}. The
+official publication is available at
+\url{https://www.ugc.ac.lk/downloads/admissions/Handbook_2025_26/student_handbook_english.pdf}.
+
+The stored page numbers are the verified printed pages: R01--R03 page 9; R04
+page 13; R05 page 50; R06--R07 page 51; R09--R11 page 57; R12--R13 page 58;
+R08 page 68; R14 page 83; R18--R21 page 84; and R15--R17 page 90.
+
+\section{Inference Design}
+
+The inference layer provides two explicit workflows. The implementation is a
+small evaluator for a fixed rule map; it is not Prolog, RETE, or a fully
+general-purpose inference engine.
+
+\subsection{Backward Chaining}
+
+For a single-course request, \texttt{backward\_chaining()} begins with the goal
+``eligible for selected course.'' It identifies the general rules R01--R04 and
+only the course-specific rules needed for that goal. Each required antecedent
+is evaluated against the applicant facts. The returned trace records the goal,
+required rules, evaluated rule results, failed conditions, source references,
+and final conclusion.
+
+\subsection{Forward Chaining}
+
+For an all-courses request, \texttt{forward\_chaining()} begins with the
+applicant facts, evaluates R01--R21 once, and derives an eligibility conclusion
+for every supported course. The returned trace records the inference mode,
+evaluated rules, derived conclusions, failed conditions, and source references.
+
+\section{Explanation and Limitations}
+
+Every course explanation displays the inference mode, final result, general
+and course rule outcomes, all failed requirements, and grouped source/page
+references. Results depend on accurate and complete input. Missing facts fail
+requirements that cannot be established, subject names must match the
+documented names, and handbook rules must be reviewed when the academic year
+changes.
+
+\end{document}

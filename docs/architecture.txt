@@ -1,22 +1,33 @@
 Sri Lankan University Course Eligibility Expert System
 Text-Based Architecture Diagram
 
-User Input
-   |
-   v
-Working Memory / ApplicantFacts
-   |
-   v
-Inference Engine
-   |
-   v
-Knowledge Base
-   |
-   v
-Rule Results
-   |
-   v
-Explanation Facility
-   |
-   v
-Eligibility Result
+                               +----------------+
+                               | ApplicantFacts |
+                               +-------+--------+
+                                       |
+                      +----------------+----------------+
+                      |                                 |
+                      v                                 v
+        +---------------------------+      +---------------------------+
+        | backward_chaining(course) |      |    forward_chaining()     |
+        | Goal: eligible for course |      | Facts drive all R01-R21   |
+        +-------------+-------------+      +-------------+-------------+
+                      |                                  |
+          R01-R04 + selected rules            all supported course rules
+                      |                                  |
+                      v                                  v
+        +---------------------------+      +---------------------------+
+        | One eligibility conclusion|      | One conclusion per course |
+        +-------------+-------------+      +-------------+-------------+
+                      |                                  |
+                      +----------------+-----------------+
+                                       |
+                                       v
+                         Rule results + InferenceTrace
+                                       |
+                                       v
+                    Explanation (mode, failures, sources)
+
+The knowledge base is independent from the CLI. The engine is a fixed,
+course-eligibility rule evaluator, not Prolog, RETE, or a general-purpose
+inference engine.

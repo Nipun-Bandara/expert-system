@@ -24,7 +24,15 @@ from expert_system.knowledge_base import (
     Rule,
 )
 from expert_system.explanations import build_course_explanation
-from expert_system.models import ApplicantFacts, CourseEvaluation, RuleResult
+from expert_system.models import (
+    ApplicantFacts,
+    BackwardChainingResult,
+    CourseEvaluation,
+    EligibilityConclusion,
+    ForwardChainingResult,
+    InferenceTrace,
+    RuleResult,
+)
 
 
 COURSE_RULE_MAP: dict[str, tuple[Rule, ...]] = {
@@ -59,6 +67,9 @@ def _course_evaluation_from_results(
     course_name: str,
     general_results: list[RuleResult],
     course_results: list[RuleResult],
+    *,
+    inference_mode: str,
+    trace: InferenceTrace,
 ) -> CourseEvaluation:
     """Create a structured course evaluation from completed rule results."""
     eligible = all(result.passed for result in general_results) and all(
@@ -74,15 +85,22 @@ def _course_evaluation_from_results(
             eligible,
             general_results,
             course_results,
+            inference_mode,
+            trace.goal if inference_mode == "backward chaining" else None,
         ),
+        inference_trace=trace,
     )
 
 
-def evaluate_course(
+def backward_chaining(
     applicant: ApplicantFacts,
     course_name: str,
-) -> CourseEvaluation:
-    """Evaluate all general and assigned rules for one course."""
+) -> BackwardChainingResult:
+    """Start with one course goal and evaluate only its required rules.
+
+    This is a small, goal-directed evaluator for the fixed course rule map; it
+    is not a general-purpose logic-programming engine.
+    """
     try:
         course_rules = COURSE_RULE_MAP[course_name]
     except (KeyError, TypeError) as error:
@@ -93,24 +111,89 @@ def evaluate_course(
 
     general_results = evaluate_general_eligibility(applicant)
     course_results = evaluate_rules(course_rules, applicant)
-    return _course_evaluation_from_results(
+    all_results = [*general_results, *course_results]
+    eligible = all(result.passed for result in all_results)
+    conclusion = EligibilityConclusion(course_name, eligible)
+    goal = f"eligible for {course_name}"
+    trace = InferenceTrace(
+        inference_mode="backward chaining",
+        goal=goal,
+        required_rule_ids=[rule.id for rule in (*GENERAL_RULES, *course_rules)],
+        evaluated_rule_results=all_results,
+        derived_conclusions=[conclusion],
+        failed_conditions=[result for result in all_results if not result.passed],
+        final_conclusion=conclusion,
+    )
+    evaluation = _course_evaluation_from_results(
         course_name,
         general_results,
         course_results,
+        inference_mode="backward chaining",
+        trace=trace,
     )
+    return BackwardChainingResult(evaluation=evaluation, trace=trace)
 
 
-def evaluate_all_courses(applicant: ApplicantFacts) -> list[CourseEvaluation]:
-    """Evaluate every mapped course while retaining all supporting rule results."""
+def forward_chaining(applicant: ApplicantFacts) -> ForwardChainingResult:
+    """Start with applicant facts and derive every supported course conclusion.
+
+    Rules are evaluated once in their knowledge-base order.  The implementation
+    is intentionally a fixed, data-driven pass rather than a RETE engine.
+    """
     general_results = evaluate_general_eligibility(applicant)
-    evaluations = []
-    for course_name, course_rules in COURSE_RULE_MAP.items():
-        course_results = evaluate_rules(course_rules, applicant)
+    course_results_by_name = {
+        course_name: evaluate_rules(course_rules, applicant)
+        for course_name, course_rules in COURSE_RULE_MAP.items()
+    }
+    evaluated_results = [
+        *general_results,
+        *[
+            result
+            for course_results in course_results_by_name.values()
+            for result in course_results
+        ],
+    ]
+    conclusions = [
+        EligibilityConclusion(
+            course_name,
+            all(result.passed for result in general_results)
+            and all(result.passed for result in course_results),
+        )
+        for course_name, course_results in course_results_by_name.items()
+    ]
+    trace = InferenceTrace(
+        inference_mode="forward chaining",
+        goal=None,
+        required_rule_ids=[result.rule_id for result in evaluated_results],
+        evaluated_rule_results=evaluated_results,
+        derived_conclusions=conclusions,
+        failed_conditions=[
+            result for result in evaluated_results if not result.passed
+        ],
+    )
+    evaluations: list[CourseEvaluation] = []
+    for course_name in COURSE_RULE_MAP:
+        course_results = course_results_by_name[course_name]
         evaluations.append(
             _course_evaluation_from_results(
                 course_name,
                 general_results,
                 course_results,
+                inference_mode="forward chaining",
+                trace=trace,
             )
         )
-    return evaluations
+    return ForwardChainingResult(evaluations=evaluations, trace=trace)
+
+
+def evaluate_course(
+    applicant: ApplicantFacts,
+    course_name: str,
+) -> CourseEvaluation:
+    """Compatibility wrapper for goal-directed course evaluation."""
+    return backward_chaining(applicant, course_name).evaluation
+
+
+def evaluate_all_courses(applicant: ApplicantFacts) -> list[CourseEvaluation]:
+    """Compatibility wrapper for data-driven evaluation of every course."""
+    return forward_chaining(applicant).evaluations

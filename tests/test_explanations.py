@@ -23,7 +23,7 @@ def test_failed_rule_ids_and_sources_are_included_in_explanation() -> None:
             "Common General Paper",
             True,
             "CGP requirement satisfied.",
-            "student_handbook_english_2025/2026.pdf",
+            "UGC-SL-ADMISSIONS-HANDBOOK-2025-2026",
             9,
         )
     ]
@@ -33,7 +33,7 @@ def test_failed_rule_ids_and_sources_are_included_in_explanation() -> None:
             "Medicine Subject/Grade",
             False,
             "At least two subjects must have C or better.",
-            "student_handbook_english_2025/2026.pdf",
+            "UGC-SL-ADMISSIONS-HANDBOOK-2025-2026",
             50,
         )
     ]
@@ -54,8 +54,8 @@ def test_failed_rule_ids_and_sources_are_included_in_explanation() -> None:
     assert "- R05 - Medicine Subject/Grade" in explanation
     assert "At least two subjects must have C or better." in explanation
     assert "SOURCE REFERENCES" in explanation
-    assert "student_handbook_english_2025/2026.pdf, page 9 (R03)" in explanation
-    assert "student_handbook_english_2025/2026.pdf, page 50 (R05)" in explanation
+    assert "UGC-SL-ADMISSIONS-HANDBOOK-2025-2026, page 9 (R03)" in explanation
+    assert "UGC-SL-ADMISSIONS-HANDBOOK-2025-2026, page 50 (R05)" in explanation
 
 
 def test_eligible_explanation_reports_no_failed_requirements() -> None:
@@ -64,7 +64,7 @@ def test_eligible_explanation_reports_no_failed_requirements() -> None:
         "Minimum Grade & Sitting",
         True,
         "Requirement satisfied.",
-        "student_handbook_english_2025/2026.pdf",
+        "UGC-SL-ADMISSIONS-HANDBOOK-2025-2026",
         9,
     )
 

@@ -22,7 +22,7 @@ Clone the repository and create a virtual environment:
 
 ```bash
 git clone https://github.com/Nipun-Bandara/expert-system.git
-cd <repository>
+cd expert-system
 python -m venv .venv
 ```
 
@@ -76,7 +76,7 @@ pytest -v
 ├── tests/                          # Unit and integration tests
 ├── docs/
 │   ├── rules.md                    # Human-readable rule inventory
-│   ├── sources.md                  # Source register
+│   ├── sources.md                  # Source 
 │   └── architecture.txt            # Text architecture diagram
 ├── requirements.txt
 └── README.md
@@ -99,26 +99,43 @@ results; it does not decide eligibility.
 
 ## How the inference engine works
 
-1. User input is stored as an `ApplicantFacts` working-memory object.
-2. The engine evaluates all four general rules: R01-R04.
-3. It selects the rules mapped to the requested course.
-4. Every selected rule is evaluated; evaluation does not stop after the first
-   failure.
-5. A course is eligible only when every general rule and every mapped course
-   rule passes.
-6. The engine returns a structured `CourseEvaluation`, not only a Boolean.
-7. The explanation facility reports the final result, general and course rule
-   traces, failed requirements, and source references.
+The project implements two explicit, deliberately small inference workflows.
+It is not Prolog, a RETE implementation, or a general-purpose inference engine.
+
+### Backward chaining: one selected course
+
+`backward_chaining()` starts with the goal `eligible for <selected course>`.
+It identifies R01-R04 plus only the course-specific rules mapped to that goal,
+then evaluates every required antecedent against the supplied `ApplicantFacts`.
+Its trace records the goal, required and evaluated rule IDs, satisfied and
+failed conditions, and the final conclusion. The CLI uses this mode when the
+user checks one course.
+
+### Forward chaining: all supported courses
+
+`forward_chaining()` starts with the applicant facts, evaluates R01-R21 once,
+and derives an eligible/not-eligible conclusion for every supported course.
+Its trace records the mode, evaluated rules, all derived conclusions, and all
+failed conditions. The CLI uses this mode when the user checks all courses.
+
+The compatibility functions `evaluate_course()` and `evaluate_all_courses()`
+remain available and delegate to backward and forward chaining respectively.
+Every `CourseEvaluation` retains the existing rule results, failed-requirement
+reporting, source references, and a reference to its inference trace.
 
 See [docs/architecture.txt](docs/architecture.txt) for the text architecture
 diagram.
 
 ## Source documents
 
-The knowledge base uses the handbook source identifiers supplied with the rule
-requirements:
+Every rule uses one structured source record and the same identifier:
 
-- `student_handbook_english_2025/2026.pdf`
+- `UGC-SL-ADMISSIONS-HANDBOOK-2025-2026`
+
+The identifier represents the University Grants Commission Sri Lanka
+publication *Admission to Undergraduate Courses of the Universities in Sri
+Lanka, Academic Year 2025/2026*. The official handbook is available at
+[ugc.ac.lk](https://www.ugc.ac.lk/downloads/admissions/Handbook_2025_26/student_handbook_english.pdf).
 
 Exact page and section information is recorded in [docs/sources.md](docs/sources.md)
 and beside every rule in [docs/rules.md](docs/rules.md).

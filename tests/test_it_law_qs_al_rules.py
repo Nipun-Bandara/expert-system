@@ -2,7 +2,7 @@
 
 import pytest
 
-from expert_system.knowledge_base import R14, R15, R18, SOURCE_R14_R15_R18, Rule
+from expert_system.knowledge_base import R14, R15, R18, SOURCE, Rule
 from expert_system.models import ApplicantFacts, RuleResult
 
 
@@ -23,7 +23,7 @@ def assert_result(result: RuleResult, rule: Rule, expected: bool) -> None:
     assert result.rule_id == rule.id
     assert result.passed is expected
     assert ("PASS:" if expected else "FAIL:") in result.message
-    assert result.source == SOURCE_R14_R15_R18
+    assert result.source == SOURCE
     assert result.page == rule.page
 
 

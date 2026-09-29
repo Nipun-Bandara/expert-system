@@ -1,4 +1,4 @@
-"""Domain models containing facts supplied to the expert system."""
+"""Domain models containing facts and traceable inference results."""
 
 from dataclasses import dataclass
 
@@ -51,6 +51,48 @@ class RuleResult:
     page: int
 
 
+@dataclass(frozen=True)
+class EligibilityConclusion:
+    """A conclusion derived for one supported course."""
+
+    course_name: str
+    eligible: bool
+
+    @property
+    def statement(self) -> str:
+        """Return the conclusion in readable goal form."""
+        status = "eligible" if self.eligible else "not eligible"
+        return f"{status} for {self.course_name}"
+
+
+@dataclass
+class InferenceTrace:
+    """Trace produced by the deliberately small course inference layer."""
+
+    inference_mode: str
+    goal: str | None
+    required_rule_ids: list[str]
+    evaluated_rule_results: list[RuleResult]
+    derived_conclusions: list[EligibilityConclusion]
+    failed_conditions: list[RuleResult]
+    final_conclusion: EligibilityConclusion | None = None
+
+    @property
+    def evaluated_rule_ids(self) -> list[str]:
+        """Return evaluated rule IDs in evaluation order."""
+        return [result.rule_id for result in self.evaluated_rule_results]
+
+    @property
+    def satisfied_antecedents(self) -> list[RuleResult]:
+        """Return required antecedents established by the supplied facts."""
+        return [result for result in self.evaluated_rule_results if result.passed]
+
+    @property
+    def failed_antecedents(self) -> list[RuleResult]:
+        """Return required antecedents not established by the supplied facts."""
+        return self.failed_conditions
+
+
 @dataclass
 class CourseEvaluation:
     """Combined general and course-specific results for one course."""
@@ -60,3 +102,25 @@ class CourseEvaluation:
     general_rule_results: list[RuleResult]
     course_rule_results: list[RuleResult]
     explanation: str
+    inference_trace: InferenceTrace | None = None
+
+    @property
+    def inference_mode(self) -> str | None:
+        """Expose the mode directly while retaining the complete trace."""
+        return self.inference_trace.inference_mode if self.inference_trace else None
+
+
+@dataclass
+class ForwardChainingResult:
+    """All course evaluations and the trace that produced them."""
+
+    evaluations: list[CourseEvaluation]
+    trace: InferenceTrace
+
+
+@dataclass
+class BackwardChainingResult:
+    """One goal-directed course evaluation and its trace."""
+
+    evaluation: CourseEvaluation
+    trace: InferenceTrace

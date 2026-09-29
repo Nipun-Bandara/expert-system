@@ -4,10 +4,13 @@ import pytest
 
 from expert_system.engine import (
     COURSE_RULE_MAP,
+    backward_chaining,
     evaluate_all_courses,
     evaluate_course,
     evaluate_general_eligibility,
+    forward_chaining,
 )
+from expert_system.knowledge_base import HANDBOOK_2025_2026
 from expert_system.models import ApplicantFacts, CourseEvaluation
 
 
@@ -180,3 +183,56 @@ def test_law_requires_r15_and_r16_and_r17() -> None:
 def test_invalid_course_name_raises_clear_error() -> None:
     with pytest.raises(ValueError, match="Unknown course 'Unknown Course'"):
         evaluate_course(make_facts(), "Unknown Course")
+
+
+def test_backward_chaining_evaluates_only_rules_required_by_selected_goal() -> None:
+    result = backward_chaining(make_facts(), "Medicine")
+
+    assert result.trace.inference_mode == "backward chaining"
+    assert result.trace.goal == "eligible for Medicine"
+    assert result.trace.required_rule_ids == ["R01", "R02", "R03", "R04", "R05"]
+    assert result.trace.evaluated_rule_ids == result.trace.required_rule_ids
+    assert [item.rule_id for item in result.trace.satisfied_antecedents] == [
+        "R01", "R02", "R03", "R04", "R05"
+    ]
+    assert result.trace.final_conclusion is not None
+    assert result.trace.final_conclusion.statement == "eligible for Medicine"
+    assert "INFERENCE MODE: BACKWARD CHAINING" in result.evaluation.explanation
+    assert "GOAL: eligible for Medicine" in result.evaluation.explanation
+
+
+def test_forward_chaining_derives_a_conclusion_for_every_supported_course() -> None:
+    result = forward_chaining(make_facts())
+
+    assert result.trace.inference_mode == "forward chaining"
+    assert result.trace.goal is None
+    assert result.trace.evaluated_rule_ids == [
+        f"R{number:02d}" for number in range(1, 22)
+    ]
+    assert [
+        conclusion.course_name for conclusion in result.trace.derived_conclusions
+    ] == list(COURSE_RULE_MAP)
+    assert [evaluation.course_name for evaluation in result.evaluations] == list(
+        COURSE_RULE_MAP
+    )
+    assert all(
+        "INFERENCE MODE: FORWARD CHAINING" in evaluation.explanation
+        for evaluation in result.evaluations
+    )
+
+
+def test_both_chaining_modes_trace_failures_and_official_sources() -> None:
+    applicant = make_facts(common_general_paper_mark=29)
+    backward = backward_chaining(applicant, "Medicine")
+    forward = forward_chaining(applicant)
+
+    assert [result.rule_id for result in backward.trace.failed_conditions] == ["R03"]
+    assert [result.rule_id for result in backward.trace.failed_antecedents] == ["R03"]
+    assert "R03" in [result.rule_id for result in forward.trace.failed_conditions]
+    for trace in (backward.trace, forward.trace):
+        assert trace.evaluated_rule_results
+        assert all(
+            result.source == HANDBOOK_2025_2026.identifier
+            for result in trace.evaluated_rule_results
+        )
+        assert all(result.page > 0 for result in trace.evaluated_rule_results)

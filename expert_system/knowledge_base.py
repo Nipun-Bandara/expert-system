@@ -8,7 +8,29 @@ from expert_system.models import ApplicantFacts, RuleResult
 
 
 RuleEvaluationFunction = Callable[[ApplicantFacts], RuleResult]
-SOURCE = "student_handbook_english_2025/2026.pdf"
+
+
+@dataclass(frozen=True)
+class SourceMetadata:
+    """Metadata for an authoritative publication used by the rules."""
+
+    identifier: str
+    title: str
+    url: str
+
+
+HANDBOOK_2025_2026 = SourceMetadata(
+    identifier="UGC-SL-ADMISSIONS-HANDBOOK-2025-2026",
+    title=(
+        "Admission to Undergraduate Courses of the Universities in Sri Lanka, "
+        "Academic Year 2025/2026"
+    ),
+    url=(
+        "https://www.ugc.ac.lk/downloads/admissions/Handbook_2025_26/"
+        "student_handbook_english.pdf"
+    ),
+)
+SOURCE = HANDBOOK_2025_2026.identifier
 
 
 @dataclass
@@ -726,8 +748,6 @@ R21 = Rule(
 COURSE_RULES += (R16, R17, R19, R20, R21)
 
 
-SOURCE_R14_R15_R18 = "student_handbook_english_2025/2026.pdf"
-
 IT_GRADE_C_SUBJECTS = (
     "Higher Mathematics",
     "Combined Mathematics",
@@ -834,7 +854,7 @@ def _evaluate_r14(facts: ApplicantFacts) -> RuleResult:
             f"{', '.join(IT_GRADE_C_SUBJECTS)}. Supplied relevant grades: "
             f"{_format_grades(relevant)}. {reason}"
         ),
-        source=SOURCE_R14_R15_R18,
+        source=SOURCE,
         page=83,
     )
 
@@ -880,7 +900,7 @@ def _evaluate_r15(facts: ApplicantFacts) -> RuleResult:
             f"{list_a_count}; List B count: {list_b_count}; grades C or better: "
             f"{grades_at_least_c}; grades S or better: {grades_at_least_s}. {reason}"
         ),
-        source=SOURCE_R14_R15_R18,
+        source=SOURCE,
         page=90,
     )
 
@@ -924,7 +944,7 @@ def _evaluate_r18(facts: ApplicantFacts) -> RuleResult:
             f"Mathematics-list count: {math_count}; other-list count: {other_count}; "
             f"grades S or better: {grades_at_least_s}. {reason}"
         ),
-        source=SOURCE_R14_R15_R18,
+        source=SOURCE,
         page=84,
     )
 
@@ -933,7 +953,7 @@ R14 = Rule(
     id="R14",
     name="Information Technology A/L Grades",
     applies_to="Information Technology",
-    source=SOURCE_R14_R15_R18,
+    source=SOURCE,
     page=83,
     evaluation_function=_evaluate_r14,
 )
@@ -942,7 +962,7 @@ R15 = Rule(
     id="R15",
     name="Law A/L Grade",
     applies_to="Law",
-    source=SOURCE_R14_R15_R18,
+    source=SOURCE,
     page=90,
     evaluation_function=_evaluate_r15,
 )
@@ -951,7 +971,7 @@ R18 = Rule(
     id="R18",
     name="Quantity Surveying A/L",
     applies_to="Quantity Surveying",
-    source=SOURCE_R14_R15_R18,
+    source=SOURCE,
     page=84,
     evaluation_function=_evaluate_r18,
 )

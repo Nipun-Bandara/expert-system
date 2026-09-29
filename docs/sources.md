@@ -1,12 +1,15 @@
 # Source Register
 
-The rule requirements supplied for this project cite the following handbook
-identifiers. Filenames are preserved exactly as provided; no uncited admission
-conditions have been added.
+All rules R01-R21 use one authoritative publication.
 
-## `student_handbook_english_2025/2026.pdf`
+- **Identifier:** `UGC-SL-ADMISSIONS-HANDBOOK-2025-2026`
+- **Publisher:** University Grants Commission Sri Lanka
+- **Title:** *Admission to Undergraduate Courses of the Universities in Sri
+  Lanka, Academic Year 2025/2026*
+- **Official URL:**
+  <https://www.ugc.ac.lk/downloads/admissions/Handbook_2025_26/student_handbook_english.pdf>
 
-Used by:
+## Verified printed pages
 
 - R01-R03 — page 9
 - R04 — page 13
@@ -15,21 +18,12 @@ Used by:
 - R09-R11 — page 57
 - R12-R13 — page 58
 - R08 — page 68
-- R19-R21 — page 84
-- R16-R17 — page 90
+- R14 — page 83
+- R18-R21 — page 84
+- R15-R17 — page 90
 
-## `student_handbook_english_2025/2026.pdf`
-
-Used by:
-
-- R14 — page 83, Section 2.2.8.1
-- R18 — page 84, Section 2.2.8.3
-- R15 — page 90, Section 2.2.8.10
-
-## Use and verification
-
-The system reports a source identifier and page with every rule result. These
-documents remain the authority for the represented requirements. Before using
-the system for a different academic year, compare every rule with the applicable
-official handbook and update both the knowledge base and its tests when the
-published requirements change.
+The page values are printed handbook page numbers, not PDF viewer indices.
+Every runtime `RuleResult` contains the common identifier and its rule's printed
+page. Before using the system for another academic year, compare every rule
+with the applicable official publication and update the knowledge base, this
+register, and the tests together.

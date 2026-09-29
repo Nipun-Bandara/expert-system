@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Iterable
 
-from expert_system.engine import COURSE_RULE_MAP, evaluate_all_courses, evaluate_course
+from expert_system.engine import COURSE_RULE_MAP, backward_chaining, forward_chaining
 from expert_system.grades import normalize_grade
 from expert_system.models import ApplicantFacts, CourseEvaluation
 
@@ -270,6 +270,21 @@ def display_course_evaluation(
     output_fn("\n" + evaluation.explanation)
 
 
+def evaluate_specific_course_workflow(
+    applicant: ApplicantFacts,
+    course_name: str,
+) -> CourseEvaluation:
+    """Run the CLI's single-course workflow using backward chaining."""
+    return backward_chaining(applicant, course_name).evaluation
+
+
+def evaluate_all_courses_workflow(
+    applicant: ApplicantFacts,
+) -> list[CourseEvaluation]:
+    """Run the CLI's all-courses workflow using forward chaining."""
+    return forward_chaining(applicant).evaluations
+
+
 def _parse_menu_choice(value: str) -> str:
     """Parse a main-menu choice."""
     choice = value.strip()
@@ -338,14 +353,15 @@ def run(
                     [course_name], input_fn, output_fn
                 )
                 display_course_evaluation(
-                    evaluate_course(applicant, course_name), output_fn
+                    evaluate_specific_course_workflow(applicant, course_name),
+                    output_fn,
                 )
             else:
                 course_names = tuple(COURSE_RULE_MAP)
                 applicant = collect_applicant_facts(
                     course_names, input_fn, output_fn
                 )
-                for evaluation in evaluate_all_courses(applicant):
+                for evaluation in evaluate_all_courses_workflow(applicant):
                     display_course_evaluation(evaluation, output_fn)
     except (EOFError, KeyboardInterrupt):
         output_fn("\nInput cancelled. Goodbye.")

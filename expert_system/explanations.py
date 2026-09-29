@@ -42,6 +42,8 @@ def build_course_explanation(
     eligible: bool,
     general_results: list[RuleResult],
     course_results: list[RuleResult],
+    inference_mode: str = "backward chaining",
+    goal: str | None = None,
 ) -> str:
     """Build a complete trace from already evaluated rule results."""
     all_results = [*general_results, *course_results]
@@ -49,6 +51,8 @@ def build_course_explanation(
     lines = [
         "=" * 50,
         course_name,
+        f"INFERENCE MODE: {inference_mode.upper()}",
+        *([f"GOAL: {goal}"] if goal is not None else []),
         f"FINAL RESULT: {final_status}",
         "=" * 50,
         "",

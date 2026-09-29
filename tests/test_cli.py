@@ -5,6 +5,8 @@ import pytest
 from expert_system.cli import (
     collect_applicant_facts,
     display_course_evaluation,
+    evaluate_all_courses_workflow,
+    evaluate_specific_course_workflow,
     parse_grade,
     parse_mark,
     parse_positive_float,
@@ -13,8 +15,9 @@ from expert_system.cli import (
     prompt_grade,
     run,
 )
+from expert_system.engine import COURSE_RULE_MAP
 from expert_system.explanations import build_course_explanation
-from expert_system.models import CourseEvaluation, RuleResult
+from expert_system.models import ApplicantFacts, CourseEvaluation, RuleResult
 
 
 @pytest.mark.parametrize("value", ["y", "Y", "yes", " YES "])
@@ -171,3 +174,30 @@ def test_run_can_exit_from_main_menu() -> None:
 
     assert output[0] == "Sri Lankan University Course Eligibility Expert System"
     assert output[-1] == "Goodbye."
+
+
+def test_cli_workflows_select_the_explicit_inference_modes() -> None:
+    applicant = ApplicantFacts(
+        al_results={"Biology": "A", "Chemistry": "C", "Physics": "S"},
+        same_sitting=True,
+        al_attempts=1,
+        common_general_paper_mark=30,
+        previous_state_university_registration=False,
+        ol_results={"English": "C", "Sinhala": "C"},
+        height_cm=148,
+        nursing_physical_condition_met=True,
+    )
+
+    selected = evaluate_specific_course_workflow(applicant, "Medicine")
+    all_courses = evaluate_all_courses_workflow(applicant)
+
+    assert selected.inference_mode == "backward chaining"
+    assert selected.inference_trace is not None
+    assert selected.inference_trace.evaluated_rule_ids == [
+        "R01", "R02", "R03", "R04", "R05"
+    ]
+    assert len(all_courses) == len(COURSE_RULE_MAP)
+    assert all(
+        evaluation.inference_mode == "forward chaining"
+        for evaluation in all_courses
+    )
