@@ -329,3 +329,208 @@ R08 = Rule(
 )
 
 COURSE_RULES = (R05, R06, R07, R08)
+
+
+def _evaluate_r09(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Nursing A/L subject requirement."""
+    return _evaluate_three_subject_s_requirement(
+        facts,
+        rule_id="R09",
+        rule_name="Nursing A/L Subject",
+        required_subjects=MEDICAL_SCIENCE_SUBJECTS,
+        page=57,
+    )
+
+
+def _evaluate_ol_english_requirement(
+    facts: ApplicantFacts,
+    *,
+    rule_id: str,
+    rule_name: str,
+    page: int,
+) -> RuleResult:
+    """Evaluate an O/L English requirement of grade S or better."""
+    english_grade = facts.ol_results.get("english")
+    supplied = f"English={english_grade}" if english_grade is not None else "none"
+
+    if english_grade is None:
+        passed = False
+        reason = "FAIL: the required O/L English result was not supplied."
+    else:
+        passed = count_grades_at_least([english_grade], "S") == 1
+        reason = (
+            "PASS: O/L English has grade S or better."
+            if passed
+            else "FAIL: O/L English has a grade below S."
+        )
+
+    return RuleResult(
+        rule_id=rule_id,
+        rule_name=rule_name,
+        passed=passed,
+        message=f"Required subject: O/L English. Supplied relevant grade: {supplied}. {reason}",
+        source=SOURCE,
+        page=page,
+    )
+
+
+def _evaluate_r10(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Nursing O/L English requirement."""
+    return _evaluate_ol_english_requirement(
+        facts,
+        rule_id="R10",
+        rule_name="Nursing O/L English",
+        page=57,
+    )
+
+
+def _evaluate_r11(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate supplied Nursing height and physical-condition facts."""
+    minimum_height_cm = 147.32
+    missing: list[str] = []
+    if facts.height_cm is None:
+        missing.append("height_cm")
+    if facts.nursing_physical_condition_met is None:
+        missing.append("nursing_physical_condition_met")
+
+    details = (
+        f"Required height: at least {minimum_height_cm:.2f} cm. "
+        f"Supplied height: {facts.height_cm if facts.height_cm is not None else 'not supplied'}. "
+        "Published physical-condition requirement supplied as satisfied: "
+        f"{facts.nursing_physical_condition_met if facts.nursing_physical_condition_met is not None else 'not supplied'}."
+    )
+
+    if missing:
+        passed = False
+        reason = (
+            "FAIL: insufficient information; required facts not supplied: "
+            f"{', '.join(missing)}."
+        )
+    else:
+        height_met = facts.height_cm >= minimum_height_cm
+        condition_met = facts.nursing_physical_condition_met is True
+        passed = height_met and condition_met
+        if passed:
+            reason = (
+                "PASS: the supplied height meets the minimum and the published "
+                "physical-condition requirement is recorded as satisfied."
+            )
+        elif not height_met and not condition_met:
+            reason = (
+                "FAIL: the supplied height is below the minimum and the published "
+                "physical-condition requirement is not recorded as satisfied."
+            )
+        elif not height_met:
+            reason = "FAIL: the supplied height is below the minimum."
+        else:
+            reason = (
+                "FAIL: the published physical-condition requirement is not recorded "
+                "as satisfied."
+            )
+
+    return RuleResult(
+        rule_id="R11",
+        rule_name="Nursing Physical",
+        passed=passed,
+        message=f"{details} {reason}",
+        source=SOURCE,
+        page=57,
+    )
+
+
+def _evaluate_r12(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Pharmacy A/L grade requirements."""
+    supplied = _relevant_grades(facts, MEDICAL_SCIENCE_SUBJECTS)
+    missing = [
+        subject for subject in MEDICAL_SCIENCE_SUBJECTS if subject not in supplied
+    ]
+    details = _subject_details(MEDICAL_SCIENCE_SUBJECTS, supplied)
+
+    if missing:
+        passed = False
+        reason = f"FAIL: missing required subjects: {', '.join(missing)}."
+    else:
+        chemistry_met = count_grades_at_least([supplied["Chemistry"]], "C") == 1
+        physics_met = count_grades_at_least([supplied["Physics"]], "S") == 1
+        biology_met = count_grades_at_least([supplied["Biology"]], "S") == 1
+        passed = chemistry_met and physics_met and biology_met
+        failed_requirements: list[str] = []
+        if not chemistry_met:
+            failed_requirements.append("Chemistry must have grade C or better")
+        if not physics_met:
+            failed_requirements.append("Physics must have grade S or better")
+        if not biology_met:
+            failed_requirements.append("Biology must have grade S or better")
+        reason = (
+            "PASS: Chemistry has grade C or better, and Physics and Biology each "
+            "have grade S or better."
+            if passed
+            else f"FAIL: {'; '.join(failed_requirements)}."
+        )
+
+    return RuleResult(
+        rule_id="R12",
+        rule_name="Pharmacy A/L Grades",
+        passed=passed,
+        message=f"{details} {reason}",
+        source=SOURCE,
+        page=58,
+    )
+
+
+def _evaluate_r13(facts: ApplicantFacts) -> RuleResult:
+    """Evaluate the Pharmacy O/L English requirement."""
+    return _evaluate_ol_english_requirement(
+        facts,
+        rule_id="R13",
+        rule_name="Pharmacy O/L English",
+        page=58,
+    )
+
+
+R09 = Rule(
+    id="R09",
+    name="Nursing A/L Subject",
+    applies_to="Nursing",
+    source=SOURCE,
+    page=57,
+    evaluation_function=_evaluate_r09,
+)
+
+R10 = Rule(
+    id="R10",
+    name="Nursing O/L English",
+    applies_to="Nursing",
+    source=SOURCE,
+    page=57,
+    evaluation_function=_evaluate_r10,
+)
+
+R11 = Rule(
+    id="R11",
+    name="Nursing Physical",
+    applies_to="Nursing",
+    source=SOURCE,
+    page=57,
+    evaluation_function=_evaluate_r11,
+)
+
+R12 = Rule(
+    id="R12",
+    name="Pharmacy A/L Grades",
+    applies_to="Pharmacy",
+    source=SOURCE,
+    page=58,
+    evaluation_function=_evaluate_r12,
+)
+
+R13 = Rule(
+    id="R13",
+    name="Pharmacy O/L English",
+    applies_to="Pharmacy",
+    source=SOURCE,
+    page=58,
+    evaluation_function=_evaluate_r13,
+)
+
+COURSE_RULES += (R09, R10, R11, R12, R13)
