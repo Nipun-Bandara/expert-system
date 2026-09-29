@@ -1,8 +1,7 @@
 # Sri Lankan University Course Eligibility Expert System
 
-A rule-based command-line expert system for determining eligibility for Sri
-Lankan university courses. The project currently provides only the initial
-architecture; eligibility rules have not yet been implemented.
+A rule-based command-line expert system for evaluating eligibility for supported
+Sri Lankan university courses and explaining each rule result with its source.
 
 ## Requirements
 
@@ -19,6 +18,8 @@ python -m pip install -r requirements.txt
 ```bash
 python main.py
 ```
+
+The interactive menu can evaluate one supported course or all supported courses.
 
 ## Run the tests
 
